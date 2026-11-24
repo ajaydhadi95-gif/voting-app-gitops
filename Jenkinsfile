@@ -92,32 +92,7 @@ pipeline {
 
                             test -f voting-app-gitops/kubernetes/deployment.yaml
 
-                            python3 - <<'PY'
-                            import os
-                            import re
-                            from pathlib import Path
-
-                            path = Path("voting-app-gitops/kubernetes/deployment.yaml")
-                            content = path.read_text()
-
-                            image = os.environ["DOCKER_IMAGE"]
-                            tag = os.environ["BUILD_NUMBER"]
-
-                            pattern = r'(?m)^(\\s*image:\\s*)' + re.escape(image) + r'(?::[^\\s]+)?\\s*$'
-
-                            updated, count = re.subn(
-                                pattern,
-                                lambda match: match.group(1) + image + ":" + tag,
-                                content
-                            )
-
-                            if count != 1:
-                                raise SystemExit(
-                                    f"Expected exactly one voting-app image entry, found {count}"
-                                )
-
-                            path.write_text(updated)
-                            PY
+                            sed -i -E "s|^([[:space:]]*image:[[:space:]]*)ajaydhadi95/voting-app(:[^[:space:]]*)?[[:space:]]*$|\\1${DOCKER_IMAGE}:${BUILD_NUMBER}|" voting-app-gitops/kubernetes/deployment.yaml
 
                             git config user.name "Jenkins"
                             git config user.email "jenkins@example.com"
