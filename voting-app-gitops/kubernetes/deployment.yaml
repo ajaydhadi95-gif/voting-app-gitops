@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: voting-app
-          image: ajaydhadi95/voting-app:8
+          image: ajaydhadi95/voting-app:9
           imagePullPolicy: Always
 
           ports:
