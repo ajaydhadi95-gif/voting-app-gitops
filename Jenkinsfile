@@ -3,10 +3,20 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ajaydhadi95/voting-app"
-        DOCKER_CREDENTIALS = "dockerhub-credentials"
-        GITOPS_URL = "https://github.com/ajaydhadi95-gif/voting-app-gitops.git"
-        GITOPS_BRANCH = "main"
+        DOCKER_IMAGE       = 'ajaydhadi95/voting-app'
+        DOCKER_CREDENTIALS = 'dockerhub-credentials'
+
+        GITOPS_URL         = 'https://github.com/ajaydhadi95-gif/voting-app-gitops.git'
+        GITOPS_BRANCH      = 'main'
+        GITOPS_CREDENTIALS = 'github-gitops-credentials'
+
+        GITOPS_DIR         = 'gitops'
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        timeout(time: 30, unit: 'MINUTES')
     }
 
     stages {
@@ -22,6 +32,7 @@ pipeline {
                 sh '''
                     python3 -m venv venv
                     . venv/bin/activate
+                    pip install --upgrade pip
                     pip install -r requirements.txt
                 '''
             }
@@ -61,29 +72,66 @@ pipeline {
 
         stage('Update GitOps Repository') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'github-gitops-credentials',
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_TOKEN'
-                    )
-                ]) {
-                    sh '''
-                        rm -rf gitops
-                        git clone -b ${GITOPS_BRANCH} \
-                        https://${GIT_USER}:${GIT_TOKEN}@github.com/ajaydhadi95-gif/voting-app-gitops.git gitops
+                dir("${GITOPS_DIR}") {
+                    deleteDir()
 
-                        cd gitops
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: GITOPS_CREDENTIALS,
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_TOKEN'
+                        )
+                    ]) {
+                        sh '''
+                            set -eu
 
-                        sed -i "s|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|" kubernetes/deployment.yaml
+                            git clone \
+                              --branch "$GITOPS_BRANCH" \
+                              "https://$GIT_USER:$GIT_TOKEN@github.com/ajaydhadi95-gif/voting-app-gitops.git" \
+                              .
 
-                        git config user.name "Jenkins"
-                        git config user.email "jenkins@example.com"
+                            test -f kubernetes/deployment.yaml
 
-                        git add kubernetes/deployment.yaml
-                        git commit -m "Update voting-app image to ${BUILD_NUMBER}" || true
-                        git push origin ${GITOPS_BRANCH}
-                    '''
+                            python3 - <<'PY'
+                            import os
+                            import re
+                            from pathlib import Path
+
+                            path = Path("kubernetes/deployment.yaml")
+                            content = path.read_text()
+
+                            image = os.environ["DOCKER_IMAGE"]
+                            tag = os.environ["BUILD_NUMBER"]
+
+                            pattern = r'(?m)^(\\s*image:\\s*)' + re.escape(image) + r'(?::[^\\s]+)?\\s*$'
+
+                            updated, count = re.subn(
+                                pattern,
+                                lambda match: match.group(1) + image + ":" + tag,
+                                content
+                            )
+
+                            if count != 1:
+                                raise SystemExit(
+                                    f"Expected exactly one voting-app image entry, found {count}"
+                                )
+
+                            path.write_text(updated)
+                            PY
+
+                            git config user.name "Jenkins"
+                            git config user.email "jenkins@example.com"
+
+                            git add kubernetes/deployment.yaml
+
+                            if git diff --cached --quiet; then
+                                echo "No GitOps changes to commit."
+                            else
+                                git commit -m "Deploy voting-app build $BUILD_NUMBER"
+                                git push origin "$GITOPS_BRANCH"
+                            fi
+                        '''
+                    }
                 }
             }
         }
@@ -91,11 +139,16 @@ pipeline {
 
     post {
         success {
-            echo 'CI successful. GitOps repository updated.'
+            echo 'SUCCESS: Docker image pushed and GitOps repository updated.'
+            echo 'Argo CD can now sync the Kubernetes deployment.'
         }
 
         failure {
-            echo 'CI pipeline failed. Check Jenkins logs.'
+            echo 'FAILED: Check Jenkins console output for the failed stage.'
+        }
+
+        always {
+            echo 'Voting App CI/CD pipeline finished.'
         }
     }
 }
