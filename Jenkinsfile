@@ -90,14 +90,14 @@ pipeline {
                               "https://$GIT_USER:$GIT_TOKEN@github.com/ajaydhadi95-gif/voting-app-gitops.git" \
                               .
 
-                            test -f kubernetes/deployment.yaml
+                            test -f voting-app-gitops/kubernetes/deployment.yaml
 
                             python3 - <<'PY'
                             import os
                             import re
                             from pathlib import Path
 
-                            path = Path("kubernetes/deployment.yaml")
+                            path = Path("voting-app-gitops/kubernetes/deployment.yaml")
                             content = path.read_text()
 
                             image = os.environ["DOCKER_IMAGE"]
@@ -122,7 +122,7 @@ pipeline {
                             git config user.name "Jenkins"
                             git config user.email "jenkins@example.com"
 
-                            git add kubernetes/deployment.yaml
+                            git add voting-app-gitops/kubernetes/deployment.yaml
 
                             if git diff --cached --quiet; then
                                 echo "No GitOps changes to commit."
