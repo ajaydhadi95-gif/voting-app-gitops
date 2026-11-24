@@ -1,0 +1,66 @@
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: voting-app
+  namespace: voting-app
+  labels:
+    app: voting-app
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: voting-app
+
+  template:
+    metadata:
+      labels:
+        app: voting-app
+
+    spec:
+      containers:
+        - name: voting-app
+          image: ajaydhadi95/voting-app:v1
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 5000
+              name: http
+
+          env:
+            - name: DB_PATH
+              value: /data/votes.db
+
+          volumeMounts:
+            - name: voting-storage
+              mountPath: /data
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+      volumes:
+        - name: voting-storage
+          persistentVolumeClaim:
+            claimName: voting-app-pvc

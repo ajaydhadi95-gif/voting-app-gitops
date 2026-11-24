@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteX | Smart Voting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="orb orb-one"></div>
+<div class="orb orb-two"></div>
+
+<div class="container">
+
+    <nav>
+        <div class="logo">VOTE<span>X.</span></div>
+        <div class="live"><span></span> LIVE VOTING</div>
+    </nav>
+
+    <header>
+        <div class="tag">YOUR VOICE MATTERS</div>
+        <h1>Cast Your Vote.</h1>
+        <p>Choose your favourite programming language.<br>
+        Every vote makes a difference!</p>
+    </header>
+
+    <section class="cards">
+
+        <div class="vote-card python-card">
+            <div class="language-icon">🐍</div>
+            <h2>Python</h2>
+            <p>Simple, powerful and versatile.</p>
+            <button onclick="castVote('Python')">Vote Python →</button>
+        </div>
+
+        <div class="vote-card java-card">
+            <div class="language-icon">☕</div>
+            <h2>Java</h2>
+            <p>Robust, scalable and powerful.</p>
+            <button onclick="castVote('Java')">Vote Java →</button>
+        </div>
+
+    </section>
+
+    <section class="results">
+        <h2>📊 Live Voting Results</h2>
+
+        <div class="result-item">
+            <div class="result-label">
+                <span>🐍 Python</span>
+                <strong id="python-count">0 votes</strong>
+            </div>
+            <div class="progress">
+                <div id="python-bar" class="bar python-bar"></div>
+            </div>
+        </div>
+
+        <div class="result-item">
+            <div class="result-label">
+                <span>☕ Java</span>
+                <strong id="java-count">0 votes</strong>
+            </div>
+            <div class="progress">
+                <div id="java-bar" class="bar java-bar"></div>
+            </div>
+        </div>
+
+        <div class="total">
+            Total Votes: <span id="total-count">0</span>
+        </div>
+    </section>
+
+    <div id="message" class="message"></div>
+
+    <footer>
+        Built with Python Flask | VoteX © 2026
+    </footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
