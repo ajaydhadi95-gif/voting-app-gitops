@@ -1,74 +1,140 @@
-
 # VoteX - Python Voting Application
 
-A modern 3D voting application built using Python Flask,
-HTML, CSS, JavaScript and SQLite.
+A Python Flask-based voting application deployed on Kubernetes using
+Jenkins CI/CD and Argo CD GitOps.
 
 ## Technology Stack
 
-- Python
-- Flask
-- HTML5
-- CSS3
-- JavaScript
+- Python and Flask
+- HTML, CSS and JavaScript
 - SQLite
-- Docker
-- Kubernetes
+- Git and GitHub
+- Jenkins
+- Docker and Docker Hub
+- Kubernetes and KIND
+- Argo CD
+- Nginx
+- AWS EC2
 
 ## Features
 
-- 3D glassmorphism UI
-- Python and Java voting
+- Modern 3D glassmorphism UI
+- Python and Java voting options
 - Live voting results
-- SQLite database persistence
+- SQLite persistent storage
+- Application health endpoint
 - Docker containerization
-- Kubernetes deployment
-- Health check endpoint
+- Kubernetes Deployment, Service and PVC
+- Automated CI/CD pipeline
+- GitOps-based continuous deployment
+- HTTPS access through Nginx reverse proxy
 
-## Run Locally
+## Project Structure
 
-Install dependencies:
+    .
+    ├── app.py
+    ├── requirements.txt
+    ├── Dockerfile
+    ├── Jenkinsfile
+    ├── README.md
+    ├── templates/
+    ├── static/
+    ├── data/
+    ├── k8s/
+    ├── voting-app-gitops/
+    │   └── kubernetes/
+    │       ├── deployment.yaml
+    │       ├── service.yaml
+    │       └── pvc.yaml
+    ├── argocd/
+    ├── infrastructure/
+    │   └── nginx/
+    └── docs/
 
-pip install -r requirements.txt
+## CI/CD Architecture
 
-Start application:
+1. Developer pushes application code to GitHub.
+2. Jenkins checks out the source code.
+3. Jenkins installs Python dependencies.
+4. Jenkins validates the Python application.
+5. Jenkins builds a Docker image.
+6. Jenkins pushes the image to Docker Hub.
+7. Jenkins updates the image tag in the GitOps manifest.
+8. Jenkins pushes the updated manifest to GitHub.
+9. Argo CD detects the GitOps repository change.
+10. Argo CD synchronizes Kubernetes resources.
+11. Kubernetes deploys the updated application.
 
-python app.py
+## Docker Image
 
-Open browser:
+    ajaydhadi95/voting-app:<BUILD_NUMBER>
 
-http://127.0.0.1:5000
-
-## Docker Build
-
-docker build -t ajaydhadi95/voting-app:v1 .
-
-## Docker Run
-
-docker run -d \
-  --name voting-app \
-  -p 5000:5000 \
-  -v voting-data:/data \
-  ajaydhadi95/voting-app:v1
-
-## Push Docker Image
-
-docker login
-
-docker push ajaydhadi95/voting-app:v1
+Jenkins generates versioned image tags using the build number.
 
 ## Kubernetes Deployment
 
-kubectl apply -f k8s/pvc.yaml
+Argo CD uses this GitOps directory:
 
-kubectl apply -f k8s/deployment.yaml
+    voting-app-gitops/kubernetes/
 
-kubectl apply -f k8s/service.yaml
+Resources:
 
-## Check Resources
+- Deployment
+- NodePort Service
+- PersistentVolumeClaim
 
-kubectl get pods
+Check deployment:
 
-kubectl get svc
+    kubectl get pods -n voting-app
+    kubectl get svc -n voting-app
+    kubectl get pvc -n voting-app
 
-kubectl get pvc
+## Argo CD
+
+Argo CD Application configuration:
+
+    argocd/application.yaml
+
+Check application:
+
+    kubectl get applications -n argocd
+
+## Nginx Reverse Proxy
+
+Configuration:
+
+    infrastructure/nginx/voting-platform.conf
+
+Traffic routing:
+
+- HTTPS 443 -> Voting Application
+- HTTPS 8443 -> Argo CD Dashboard
+- HTTP 80 -> HTTPS redirect
+
+## Application URLs
+
+- Voting Application: https://3.109.210.192
+- Argo CD Dashboard: https://3.109.210.192:8443
+
+The current setup uses a self-signed SSL certificate.
+Your browser may display a certificate warning.
+
+## Documentation
+
+- docs/architecture.md
+- docs/deployment-guide.md
+- docs/jenkins-cicd.md
+
+## Security
+
+- Store Docker Hub and GitHub credentials in Jenkins Credentials.
+- Never commit passwords, access tokens, or SSL private keys.
+- Use a trusted SSL certificate for production.
+- Restrict SSH access through AWS Security Groups.
+
+## GitOps Deployment
+
+Jenkins updates the desired image version in Git.
+Argo CD reconciles the Kubernetes cluster with the GitOps repository.
+
+Jenkins does not directly deploy the application using kubectl.

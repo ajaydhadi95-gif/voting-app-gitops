@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Runtime database
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# SSL certificates and private keys
+*.key
+*.pem
+*.crt
+
+# Secrets and credentials
+secrets/
+credentials/
+*.secret
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
